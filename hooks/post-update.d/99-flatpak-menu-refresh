@@ -5,7 +5,12 @@
 if [[ -f "$HOME/.config/omarchy/extensions/omarchy-menu.jsonc" ]]; then
     # Check if our entries exist
     if ! grep -q "install.flatpak" "$HOME/.config/omarchy/extensions/omarchy-menu.jsonc"; then
-        # Re-run menu append logic (idempotent)
-        /usr/local/bin/omarchy-flatpak-menu-append 2>/dev/null || true
+        # Call the append helper
+        if command -v omarchy-flatpak-menu-append >/dev/null 2>&1; then
+            omarchy-flatpak-menu-append
+        else
+            # Fallback: re-run installer in append-only mode
+            curl -fsSL "https://raw.githubusercontent.com/Shishir-Kc/omarchy-flatpak-menu/refs/heads/master/install.sh" | bash -s -- --append-only 2>/dev/null || true
+        fi
     fi
 fi

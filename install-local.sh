@@ -73,32 +73,95 @@ if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
     echo "[WARN] Add ~/.local/bin to PATH in your shell config"
 fi
 
-# 4. Append menu entries
+# 4. Append menu entries (idempotent, robust)
 echo "[CONFIG] Adding Flatpak menu to Omarchy..."
 MENU_FILE="$HOME/.config/omarchy/extensions/omarchy-menu.jsonc"
 mkdir -p "$(dirname "$MENU_FILE")"
 
-# Backup existing
-[[ -f "$MENU_FILE" ]] && cp "$MENU_FILE" "$MENU_FILE.bak.$(date +%s)"
-
-# Append our entries (idempotent - skip if already present)
 append_menu_entries() {
-    local menu_content=$(cat "$SCRIPT_DIR/menu/flatpak-menu.jsonc")
+    local menu_jsonc="$SCRIPT_DIR/menu/flatpak-menu.jsonc"
+    local tmp="/tmp/flatpak-menu-entries.jsonc"
 
-    # If flatpak entries already exist, skip (don't duplicate)
-    if [[ -f "$MENU_FILE" ]] && grep -q '"install\.flatpak"' "$MENU_FILE"; then
+    # Strip outer braces and comments to get just the key/value entries
+    python3 -c "
+import json, re, sys
+with open('$menu_jsonc') as f:
+    content = f.read()
+# Find first {
+start = content.index('{')
+content = content[start:]
+# Remove // comments
+lines = []
+for line in content.split('\n'):
+    if line.strip().startswith('//'): continue
+    if '//' in line and '://' not in line:
+        idx = line.index('//')
+        if line[:idx].count('\"') % 2 == 0:
+            line = line[:idx]
+    lines.append(line)
+content = '\n'.join(lines)
+# Remove trailing commas
+content = re.sub(r',(\s*[}\]])', r'\1', content)
+# Parse to validate
+data = json.loads(content)
+# Write only the inner entries (skip outer {})
+with open('$tmp', 'w') as out:
+    out.write(content[1:-1].strip())
+" || { echo "[ERROR] Failed to parse flatpak-menu.jsonc" >&2; exit 1; }
+
+    # Backup
+    [[ -f "$MENU_FILE" ]] && cp "$MENU_FILE" "$MENU_FILE.bak.$(date +%s)"
+
+    # If menu doesn't exist, create with template header + entries
+    if [[ ! -f "$MENU_FILE" ]]; then
+        cat > "$MENU_FILE" << 'EOF'
+{
+  // Extend the Quickshell Omarchy menu with JSONC.
+  //
+  // IDs are object keys. The parent is inferred from the dotted id, so
+  // "personal.notes" appears under "personal", and "personal" appears on the
+  // root menu. Reuse an existing id to override/extend it.
+  //
+  // Fields:
+  //   icon        Nerd Font glyph shown in the icon column.
+  //   label       Visible row title.
+  //   action      Shell command to run. If omitted, the row is a submenu.
+  //   target      Existing submenu id to open. Use for links/aliases.
+  //   provider    Runtime provider function/command returning JSON rows.
+  //   aliases     alternate `omarchy menu summon <name>` routes; also searchable.
+  //   description Optional subtitle and extra search text.
+  //   when        Shell condition; hide row when it fails.
+  //   checked     Shell condition; append ✓ when it succeeds.
+  //
+  // Examples:
+  // "personal": {"icon":"","label":"Personal"},
+  // "personal.notes": {"icon":"󰎞","label":"Notes","action":"omarchy-launch-editor ~/notes"},
+  // "personal.files": {"icon":"","label":"Files","action":"uwsm-app -- nautilus ~/Documents"},
+  //
+  // Only use provider when a provider_name function or command named "name"
+  // returns JSON rows. Static submenus only need dotted ids.
+  //
+  // Example: replace the default About action by reusing the same id. Existing
+  // fields are kept unless overridden.
+  // "about": {"icon":"","label":"About","action":"omarchy-launch-or-focus-tui \"zsh -c 'fastfetch; read -k 1'\""},
+EOF
+        cat "$tmp" >> "$MENU_FILE"
+        echo "}" >> "$MENU_FILE"
+        echo "[CONFIG] Created new menu file with Flatpak entries"
+        return
+    fi
+
+    # If flatpak entries already present, skip (idempotent)
+    if grep -q '"install\.flatpak"' "$MENU_FILE"; then
         echo "[CONFIG] Flatpak menu entries already present, skipping..."
         return
     fi
 
-    # Append our entries before the closing brace
-    if [[ -f "$MENU_FILE" ]]; then
-        sed -i '$ d' "$MENU_FILE"  # Remove closing }
-        echo "$menu_content" >> "$MENU_FILE"
-        echo "}" >> "$MENU_FILE"
-    else
-        echo "$menu_content" > "$MENU_FILE"
-    fi
+    # Remove final }, append entries, add }
+    sed -i '$ d' "$MENU_FILE"
+    cat "$tmp" >> "$MENU_FILE"
+    echo "}" >> "$MENU_FILE"
+    echo "[CONFIG] Appended Flatpak entries to existing menu"
 }
 
 append_menu_entries
@@ -109,7 +172,20 @@ mkdir -p "$HOME/.config/omarchy/hooks/post-update.d"
 cp "$SCRIPT_DIR/hooks/post-update.d/99-flatpak-menu-refresh" "$HOME/.config/omarchy/hooks/post-update.d/99-flatpak-menu-refresh"
 chmod +x "$HOME/.config/omarchy/hooks/post-update.d/99-flatpak-menu-refresh"
 
-# 6. Create uninstaller
+# 6. Install append script for hook to use
+echo "[APPEND] Installing menu-append helper..."
+mkdir -p "$BIN_DIR"
+cat > "$BIN_DIR/omarchy-flatpak-menu-append" << 'EOF'
+#!/bin/bash
+# Called by post-update hook to re-apply Flatpak menu entries
+set -euo pipefail
+SCRIPT_DIR="$HOME/.local/share/omarchy-flatpak-menu"
+export SCRIPT_DIR
+exec "$SCRIPT_DIR/install-local.sh" --append-only 2>/dev/null
+EOF
+chmod +x "$BIN_DIR/omarchy-flatpak-menu-append"
+
+# 7. Create uninstaller
 echo "[UNINSTALL] Creating uninstaller..."
 cat > "$INSTALL_DIR/uninstall.sh" << 'UNINSTALL_EOF'
 #!/bin/bash
@@ -122,16 +198,48 @@ echo "[REMOVE] Uninstalling Omarchy Flatpak Menu..."
 # Remove bin scripts
 rm -f "$HOME/.local/bin/omarchy-ensure-flatpak"
 rm -f "$HOME/.local/bin/omarchy-flatpak-install"
+rm -f "$HOME/.local/bin/omarchy-flatpak-menu-append"
 
-# Remove menu entries
+# Remove menu entries cleanly using Python (preserves JSONC structure)
 MENU_FILE="$HOME/.config/omarchy/extensions/omarchy-menu.jsonc"
 if [[ -f "$MENU_FILE" ]]; then
-    awk '
-        /^\s*"install\.flatpak/ { in_flatpak=1; next }
-        in_flatpak && /^\s*}/ { in_flatpak=0; next }
-        !in_flatpak { print }
-    ' "$MENU_FILE" > "$MENU_FILE.tmp"
-    mv "$MENU_FILE.tmp" "$MENU_FILE"
+    python3 -c "
+import json, re, sys
+with open('$MENU_FILE') as f:
+    content = f.read()
+start = content.index('{')
+header = content[:start]
+jsonc = content[start:]
+# Remove // comments for parsing
+lines = []
+for line in jsonc.split('\n'):
+    if line.strip().startswith('//'): continue
+    if '//' in line and '://' not in line:
+        idx = line.index('//')
+        if line[:idx].count('\"') % 2 == 0:
+            line = line[:idx]
+    lines.append(line)
+jsonc = '\n'.join(lines)
+jsonc = re.sub(r',(\s*[}\]])', r'\1', jsonc)
+data = json.loads(jsonc)
+# Delete flatpak keys
+keys_to_del = [k for k in data if k.startswith('install.flatpak')]
+for k in keys_to_del:
+    del data[k]
+# Rebuild: keep header, write remaining keys
+out = header + '{\n'
+items = list(data.items())
+for i, (k, v) in enumerate(items):
+    out += json.dumps({k: v})[1:-1]
+    if i < len(items) - 1:
+        out += ',\n'
+    else:
+        out += '\n'
+out += '}'
+with open('$MENU_FILE', 'w') as f:
+    f.write(out)
+print(f'Removed {len(keys_to_del)} flatpak entries')
+"
 fi
 
 # Remove hook
@@ -158,12 +266,15 @@ if [[ "${FLATPAK_INSTALLED:-0}" -eq 0 ]]; then
 fi
 echo ""
 echo "Next steps:"
-echo "   1. Restart Omarchy shell: omarchy restart shell"
-echo "   2. Open menu (Super+Space) -> Install -> Flatpak Apps"
-echo "   3. Try 'Search Flathub...' for fuzzy search"
+echo "   1. Open menu (Super+Space) -> Install -> Flatpak Apps"
+echo "   2. Try 'Search Flathub...' for fuzzy search"
 echo ""
 echo "To uninstall: ~/.local/share/omarchy-flatpak-menu/uninstall.sh"
 
-# Auto-restart Omarchy shell
-echo "[SHELL] Restarting Omarchy shell..."
-omarchy restart shell
+# 8. Auto-restart Omarchy shell (optional, guarded)
+if command -v omarchy >/dev/null 2>&1; then
+    echo "[SHELL] Restarting Omarchy shell..."
+    omarchy restart shell
+else
+    echo "[WARN] 'omarchy' not in PATH; restart shell manually: omarchy restart shell"
+fi
