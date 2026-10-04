@@ -162,3 +162,7 @@ echo "   2. Open menu (Super+Space) -> Install -> Flatpak Apps"
 echo " 3. Try 'Search Flathub...' for fuzzy search"
 echo ""
 echo "To uninstall: ~/.local/share/omarchy-flatpak-menu/uninstall.sh"
+
+# Auto-restart Omarchy shell
+echo "[SHELL] Restarting Omarchy shell..."
+omarchy restart shell
