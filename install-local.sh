@@ -81,19 +81,14 @@ mkdir -p "$(dirname "$MENU_FILE")"
 # Backup existing
 [[ -f "$MENU_FILE" ]] && cp "$MENU_FILE" "$MENU_FILE.bak.$(date +%s)"
 
-# Append our entries (idempotent - removes old entries first)
+# Append our entries (idempotent - skip if already present)
 append_menu_entries() {
     local menu_content=$(cat "$SCRIPT_DIR/menu/flatpak-menu.jsonc")
 
-    # Remove any existing flatpak entries
-    if [[ -f "$MENU_FILE" ]]; then
-        # Create temp file without our entries
-        awk '
-            /^\s*"install\.flatpak/ { in_flatpak=1; next }
-            in_flatpak && /^\s*}/ { in_flatpak=0; next }
-            !in_flatpak { print }
-        ' "$MENU_FILE" > "$MENU_FILE.tmp"
-        mv "$MENU_FILE.tmp" "$MENU_FILE"
+    # If flatpak entries already exist, skip (don't duplicate)
+    if [[ -f "$MENU_FILE" ]] && grep -q '"install\.flatpak"' "$MENU_FILE"; then
+        echo "[CONFIG] Flatpak menu entries already present, skipping..."
+        return
     fi
 
     # Append our entries before the closing brace
