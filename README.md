@@ -1,12 +1,13 @@
 # Omarchy Flatpak Menu
 
-Adds a **Flatpak Apps** submenu to Omarchy's Install menu with curated applications and a fuzzy-search interface for browsing all of Flathub.
+Adds **Flatpak Apps** submenus to Omarchy's Install and Remove menus with curated applications and fuzzy-search interfaces for browsing Flathub and removing installed apps.
 
 ## Features
 
 - 📦 **Curated Categories** - 40+ popular apps organized by category (Browsers, Communication, Development, Media, Gaming, Utilities)
 - 🔍 **Flathub Search** - fzf-based fuzzy finder (like `omarchy-pkg-install`) to browse ALL ~2000 Flathub apps
-- ⚡ **Smart Guards** - Apps auto-hide when already installed via Flatpak
+- 🗑️ **Flatpak Remove** - fzf-based remover plus curated entries under Remove menu, shows only installed apps
+- ⚡ **Smart Guards** - Install hides installed apps, Remove hides missing apps
 - 🔄 **Auto-refresh** - Survives `omarchy update` config refreshes
 - 🗑️ **Clean Uninstall** - Removes everything completely
 
@@ -125,6 +126,24 @@ Flatpak Apps from Flathub | TAB=multi-select | ALT-p=preview | ENTER=install
 - `Alt-j/k` - Scroll preview
 - `Alt-d/u` - Half-page scroll preview
 - `Enter` - Install selected app(s)
+
+### Remove Flatpak Apps
+
+Open the Omarchy menu and navigate to:
+
+```
+Remove
+└── Flatpak Apps 󰏓
+    ├── 󰍉 Remove Installed...   <- fzf over installed apps (any app, not just curated)
+    ├──  Browsers (only installed show)
+    ├── 󰭹 Communication
+    ├── 󰵮 Development
+    ├── 󰓇 Media
+    ├──  Gaming
+    └── 󰏓 Utilities
+```
+
+Curated remove entries use `when: flatpak info <id>` so they appear only when installed. `Remove Installed...` runs `omarchy-flatpak-remove` with multi-select and `flatpak info` preview, then uninstalls in a floating terminal.
 
 ## Uninstall
 

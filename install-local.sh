@@ -119,7 +119,8 @@ mkdir -p "$INSTALL_DIR" "$BIN_DIR"
 echo "[COPY] Copying scripts..."
 cp "$SCRIPT_DIR/bin/omarchy-ensure-flatpak" "$BIN_DIR/omarchy-ensure-flatpak"
 cp "$SCRIPT_DIR/bin/omarchy-flatpak-install" "$BIN_DIR/omarchy-flatpak-install"
-chmod +x "$BIN_DIR/omarchy-ensure-flatpak" "$BIN_DIR/omarchy-flatpak-install"
+cp "$SCRIPT_DIR/bin/omarchy-flatpak-remove" "$BIN_DIR/omarchy-flatpak-remove"
+chmod +x "$BIN_DIR/omarchy-ensure-flatpak" "$BIN_DIR/omarchy-flatpak-install" "$BIN_DIR/omarchy-flatpak-remove"
 
 # 3. Ensure ~/.local/bin is in PATH
 if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
@@ -132,35 +133,42 @@ MENU_FILE="$HOME/.config/omarchy/extensions/omarchy-menu.jsonc"
 mkdir -p "$(dirname "$MENU_FILE")"
 
 append_menu_entries() {
-    local menu_jsonc="$SCRIPT_DIR/menu/flatpak-menu.jsonc"
+    local install_jsonc="$SCRIPT_DIR/menu/flatpak-menu.jsonc"
+    local remove_jsonc="$SCRIPT_DIR/menu/flatpak-remove.jsonc"
     local tmp="/tmp/flatpak-menu-entries.jsonc"
 
-    # Strip outer braces and comments to get just the key/value entries
+    # Merge install + remove entries, strip outer braces/comments, validate
     python3 -c "
-import json, re, sys
-with open('$menu_jsonc') as f:
-    content = f.read()
-# Find first {
-start = content.index('{')
-content = content[start:]
-# Remove // comments
-lines = []
-for line in content.split('\n'):
-    if line.strip().startswith('//'): continue
-    if '//' in line and '://' not in line:
-        idx = line.index('//')
-        if line[:idx].count('\"') % 2 == 0:
-            line = line[:idx]
-    lines.append(line)
-content = '\n'.join(lines)
-# Remove trailing commas
-content = re.sub(r',(\s*[}\]])', r'\1', content)
-# Parse to validate
-data = json.loads(content)
-# Write only the inner entries (skip outer {})
+import json, re
+def load_inner(path):
+    with open(path) as f:
+        content = f.read()
+    start = content.index('{')
+    content = content[start:]
+    lines = []
+    for line in content.split('\n'):
+        if line.strip().startswith('//'): continue
+        if '//' in line and '://' not in line:
+            idx = line.index('//')
+            if line[:idx].count('\"') % 2 == 0:
+                line = line[:idx]
+        lines.append(line)
+    content = '\n'.join(lines)
+    content = re.sub(r',(\s*[}\]])', r'\1', content)
+    data = json.loads(content)
+    # return inner text (skip outer {})
+    inner = content[content.index('{')+1:content.rindex('}')].strip()
+    return data, inner
+idata, iinner = load_inner('$install_jsonc')
+rdata, rinner = load_inner('$remove_jsonc')
+# Validate no duplicate keys across files
+overlap = set(idata) & set(rdata)
+assert not overlap, f'duplicate keys: {overlap}'
+combined = iinner.rstrip().rstrip(',') + ',\n' + rinner
 with open('$tmp', 'w') as out:
-    out.write(content[1:-1].strip())
-" || { echo "[ERROR] Failed to parse flatpak-menu.jsonc" >&2; exit 1; }
+    out.write(combined)
+print(f'install={len(idata)} remove={len(rdata)}')
+" || { echo "[ERROR] Failed to parse flatpak menu files" >&2; exit 1; }
 
     # Backup
     [[ -f "$MENU_FILE" ]] && cp "$MENU_FILE" "$MENU_FILE.bak.$(date +%s)"
@@ -204,9 +212,53 @@ EOF
         return
     fi
 
-    # If flatpak entries already present, skip (idempotent)
-    if grep -q '"install\.flatpak"' "$MENU_FILE"; then
+    # If both install and remove entries present, skip (idempotent)
+    if grep -q '"install\.flatpak"' "$MENU_FILE" && grep -q '"remove\.flatpak"' "$MENU_FILE"; then
         echo "[CONFIG] Flatpak menu entries already present, skipping..."
+        return
+    fi
+
+    # If partially present (e.g. old version without remove), clean slate via python merge
+    if grep -q '"install\.flatpak"\|"remove\.flatpak"' "$MENU_FILE"; then
+        echo "[CONFIG] Partial entries found, rebuilding via merge..."
+        python3 -c "
+import json, re
+with open('$MENU_FILE') as f:
+    content = f.read()
+start = content.index('{')
+header = content[:start]
+jsonc = content[start:]
+lines = []
+for line in jsonc.split('\n'):
+    if line.strip().startswith('//'): continue
+    if '//' in line and '://' not in line:
+        idx = line.index('//')
+        if line[:idx].count('\"') % 2 == 0:
+            line = line[:idx]
+    lines.append(line)
+jsonc = '\n'.join(lines)
+jsonc = re.sub(r',(\s*[}\]])', r'\1', jsonc)
+data = json.loads(jsonc)
+# Drop all flatpak keys, keep user custom keys
+data = {k: v for k, v in data.items() if not k.startswith('install.flatpak') and not k.startswith('remove.flatpak')}
+with open('$tmp.user', 'w') as out:
+    items = list(data.items())
+    for i, (k, v) in enumerate(items):
+        out.write('  ' + json.dumps(k) + ': ' + json.dumps(v, ensure_ascii=False))
+        out.write(',\n' if i < len(items) - 1 else '\n')
+print(f'kept {len(data)} user keys')
+"
+        # Rebuild: header + { + user keys + combined flatpak + }
+        {
+            printf '%s{\n' "$(sed -n '1,/^{/p' "$MENU_FILE" | sed '$d')"
+            cat "$tmp.user" 2>/dev/null || true
+            # Add comma if user keys exist
+            if [ -s "$tmp.user" ]; then printf ',\n'; fi
+            cat "$tmp"
+            printf '\n}\n'
+        } > "$MENU_FILE.new"
+        mv "$MENU_FILE.new" "$MENU_FILE"
+        echo "[CONFIG] Rebuilt menu with Flatpak install + remove entries"
         return
     fi
 
@@ -251,6 +303,7 @@ echo "[REMOVE] Uninstalling Omarchy Flatpak Menu..."
 # Remove bin scripts
 rm -f "$HOME/.local/bin/omarchy-ensure-flatpak"
 rm -f "$HOME/.local/bin/omarchy-flatpak-install"
+rm -f "$HOME/.local/bin/omarchy-flatpak-remove"
 rm -f "$HOME/.local/bin/omarchy-flatpak-menu-append"
 
 # Remove menu entries cleanly using Python (preserves JSONC structure)
@@ -275,8 +328,8 @@ for line in jsonc.split('\n'):
 jsonc = '\n'.join(lines)
 jsonc = re.sub(r',(\s*[}\]])', r'\1', jsonc)
 data = json.loads(jsonc)
-# Delete flatpak keys
-keys_to_del = [k for k in data if k.startswith('install.flatpak')]
+# Delete flatpak keys (install + remove)
+keys_to_del = [k for k in data if k.startswith('install.flatpak') or k.startswith('remove.flatpak')]
 for k in keys_to_del:
     del data[k]
 # Rebuild: keep header, write remaining keys

@@ -5,6 +5,9 @@
 set -euo pipefail
 
 REPO_BASE="https://raw.githubusercontent.com/Shishir-Kc/omarchy-flatpak-menu/refs/heads/master"
+
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INSTALL_DIR="$HOME/.local/share/omarchy-flatpak-menu"
 BIN_DIR="$HOME/.local/bin"
 
@@ -110,30 +113,68 @@ if command -v flatpak >/dev/null 2>&1; then
 elif [[ "${FLATPAK_INSTALLED:-0}" -eq 0 ]]; then
     echo "[WARN] Skipping Flathub setup - Flatpak not installed yet"
 fi
-    curl -fsSL "$REPO_BASE/menu/flatpak-menu.jsonc" | python3 -c "
-import json, re, sys
-content = sys.stdin.read()
-# Find first {
-start = content.index('{')
-content = content[start:]
-# Remove // comments
-lines = []
-for line in content.split('\n'):
-    if line.strip().startswith('//'): continue
-    if '//' in line and '://' not in line:
-        idx = line.index('//')
-        if line[:idx].count('\"') % 2 == 0:
-            line = line[:idx]
-    lines.append(line)
-content = '\n'.join(lines)
-# Remove trailing commas
-content = re.sub(r',(\s*[}\]])', r'\1', content)
-# Parse to validate
-data = json.loads(content)
-# Write only the inner entries (skip outer {})
+
+# 1. Create directories
+mkdir -p "$INSTALL_DIR" "$BIN_DIR"
+
+# 2. Download scripts
+echo "[DOWNLOAD] Downloading scripts..."
+curl -fsSL "$REPO_BASE/bin/omarchy-ensure-flatpak" -o "$BIN_DIR/omarchy-ensure-flatpak"
+curl -fsSL "$REPO_BASE/bin/omarchy-flatpak-install" -o "$BIN_DIR/omarchy-flatpak-install"
+curl -fsSL "$REPO_BASE/bin/omarchy-flatpak-remove" -o "$BIN_DIR/omarchy-flatpak-remove"
+chmod +x "$BIN_DIR/omarchy-ensure-flatpak" "$BIN_DIR/omarchy-flatpak-install" "$BIN_DIR/omarchy-flatpak-remove"
+
+# 3. Ensure ~/.local/bin is in PATH
+if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+    echo "[WARN] Add ~/.local/bin to PATH in your shell config"
+fi
+
+# 4. Append menu entries (idempotent, robust)
+echo "[CONFIG] Adding Flatpak menu to Omarchy..."
+MENU_FILE="$HOME/.config/omarchy/extensions/omarchy-menu.jsonc"
+mkdir -p "$(dirname "$MENU_FILE")"
+
+append_menu_entries() {
+    local tmp="/tmp/flatpak-menu-entries.jsonc"
+    local tmp_install="/tmp/flatpak-menu-install.jsonc"
+    local tmp_remove="/tmp/flatpak-menu-remove.jsonc"
+    curl -fsSL "$REPO_BASE/menu/flatpak-menu.jsonc" -o "$tmp_install"
+    curl -fsSL "$REPO_BASE/menu/flatpak-remove.jsonc" -o "$tmp_remove"
+    local install_jsonc="$tmp_install"
+    local remove_jsonc="$tmp_remove"
+
+    # Merge install + remove entries, strip outer braces/comments, validate
+    python3 -c "
+import json, re
+def load_inner(path):
+    with open(path) as f:
+        content = f.read()
+    start = content.index('{')
+    content = content[start:]
+    lines = []
+    for line in content.split('\n'):
+        if line.strip().startswith('//'): continue
+        if '//' in line and '://' not in line:
+            idx = line.index('//')
+            if line[:idx].count('\"') % 2 == 0:
+                line = line[:idx]
+        lines.append(line)
+    content = '\n'.join(lines)
+    content = re.sub(r',(\s*[}\]])', r'\1', content)
+    data = json.loads(content)
+    # return inner text (skip outer {})
+    inner = content[content.index('{')+1:content.rindex('}')].strip()
+    return data, inner
+idata, iinner = load_inner('$install_jsonc')
+rdata, rinner = load_inner('$remove_jsonc')
+# Validate no duplicate keys across files
+overlap = set(idata) & set(rdata)
+assert not overlap, f'duplicate keys: {overlap}'
+combined = iinner.rstrip().rstrip(',') + ',\n' + rinner
 with open('$tmp', 'w') as out:
-    out.write(content[1:-1].strip())
-" || { echo "[ERROR] Failed to parse flatpak-menu.jsonc" >&2; exit 1; }
+    out.write(combined)
+print(f'install={len(idata)} remove={len(rdata)}')
+" || { echo "[ERROR] Failed to parse flatpak menu files" >&2; exit 1; }
 
     # Backup
     [[ -f "$MENU_FILE" ]] && cp "$MENU_FILE" "$MENU_FILE.bak.$(date +%s)"
@@ -154,7 +195,7 @@ with open('$tmp', 'w') as out:
   //   action      Shell command to run. If omitted, the row is a submenu.
   //   target      Existing submenu id to open. Use for links/aliases.
   //   provider    Runtime provider function/command returning JSON rows.
-  //   aliases     alternate \`omarchy menu summon <name>\` routes; also searchable.
+  //   aliases     alternate `omarchy menu summon <name>` routes; also searchable.
   //   description Optional subtitle and extra search text.
   //   when        Shell condition; hide row when it fails.
   //   checked     Shell condition; append ✓ when it succeeds.
@@ -177,9 +218,53 @@ EOF
         return
     fi
 
-    # If flatpak entries already present, skip (idempotent)
-    if grep -q '"install\.flatpak"' "$MENU_FILE"; then
+    # If both install and remove entries present, skip (idempotent)
+    if grep -q '"install\.flatpak"' "$MENU_FILE" && grep -q '"remove\.flatpak"' "$MENU_FILE"; then
         echo "[CONFIG] Flatpak menu entries already present, skipping..."
+        return
+    fi
+
+    # If partially present (e.g. old version without remove), clean slate via python merge
+    if grep -q '"install\.flatpak"\|"remove\.flatpak"' "$MENU_FILE"; then
+        echo "[CONFIG] Partial entries found, rebuilding via merge..."
+        python3 -c "
+import json, re
+with open('$MENU_FILE') as f:
+    content = f.read()
+start = content.index('{')
+header = content[:start]
+jsonc = content[start:]
+lines = []
+for line in jsonc.split('\n'):
+    if line.strip().startswith('//'): continue
+    if '//' in line and '://' not in line:
+        idx = line.index('//')
+        if line[:idx].count('\"') % 2 == 0:
+            line = line[:idx]
+    lines.append(line)
+jsonc = '\n'.join(lines)
+jsonc = re.sub(r',(\s*[}\]])', r'\1', jsonc)
+data = json.loads(jsonc)
+# Drop all flatpak keys, keep user custom keys
+data = {k: v for k, v in data.items() if not k.startswith('install.flatpak') and not k.startswith('remove.flatpak')}
+with open('$tmp.user', 'w') as out:
+    items = list(data.items())
+    for i, (k, v) in enumerate(items):
+        out.write('  ' + json.dumps(k) + ': ' + json.dumps(v, ensure_ascii=False))
+        out.write(',\n' if i < len(items) - 1 else '\n')
+print(f'kept {len(data)} user keys')
+"
+        # Rebuild: header + { + user keys + combined flatpak + }
+        {
+            printf '%s{\n' "$(sed -n '1,/^{/p' "$MENU_FILE" | sed '$d')"
+            cat "$tmp.user" 2>/dev/null || true
+            # Add comma if user keys exist
+            if [ -s "$tmp.user" ]; then printf ',\n'; fi
+            cat "$tmp"
+            printf '\n}\n'
+        } > "$MENU_FILE.new"
+        mv "$MENU_FILE.new" "$MENU_FILE"
+        echo "[CONFIG] Rebuilt menu with Flatpak install + remove entries"
         return
     fi
 
@@ -207,8 +292,7 @@ cat > "$BIN_DIR/omarchy-flatpak-menu-append" << 'EOF'
 set -euo pipefail
 SCRIPT_DIR="$HOME/.local/share/omarchy-flatpak-menu"
 export SCRIPT_DIR
-# We need to re-download or use local copy - use remote
-curl -fsSL "https://raw.githubusercontent.com/Shishir-Kc/omarchy-flatpak-menu/refs/heads/master/install.sh" | bash -s -- --append-only 2>/dev/null
+exec "$SCRIPT_DIR/install-local.sh" --append-only 2>/dev/null
 EOF
 chmod +x "$BIN_DIR/omarchy-flatpak-menu-append"
 
@@ -225,6 +309,7 @@ echo "[REMOVE] Uninstalling Omarchy Flatpak Menu..."
 # Remove bin scripts
 rm -f "$HOME/.local/bin/omarchy-ensure-flatpak"
 rm -f "$HOME/.local/bin/omarchy-flatpak-install"
+rm -f "$HOME/.local/bin/omarchy-flatpak-remove"
 rm -f "$HOME/.local/bin/omarchy-flatpak-menu-append"
 
 # Remove menu entries cleanly using Python (preserves JSONC structure)
@@ -249,8 +334,8 @@ for line in jsonc.split('\n'):
 jsonc = '\n'.join(lines)
 jsonc = re.sub(r',(\s*[}\]])', r'\1', jsonc)
 data = json.loads(jsonc)
-# Delete flatpak keys
-keys_to_del = [k for k in data if k.startswith('install.flatpak')]
+# Delete flatpak keys (install + remove)
+keys_to_del = [k for k in data if k.startswith('install.flatpak') or k.startswith('remove.flatpak')]
 for k in keys_to_del:
     del data[k]
 # Rebuild: keep header, write remaining keys
@@ -301,7 +386,7 @@ echo "   2. Try 'Search Flathub...' for fuzzy search"
 echo ""
 echo "To uninstall: ~/.local/share/omarchy-flatpak-menu/uninstall.sh"
 
-# 8. Auto-restart Omarchy shell (guarded)
+# 8. Auto-restart Omarchy shell (optional, guarded)
 if command -v omarchy >/dev/null 2>&1; then
     echo "[SHELL] Restarting Omarchy shell..."
     omarchy restart shell
