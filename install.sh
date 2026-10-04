@@ -6,8 +6,9 @@ set -euo pipefail
 
 REPO_BASE="https://raw.githubusercontent.com/Shishir-Kc/omarchy-flatpak-menu/refs/heads/master"
 
-# Get the directory where this script is located
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# NOTE: no SCRIPT_DIR here — this file runs via `curl ... | bash` where
+# BASH_SOURCE[0] is unset (and `set -u` would abort). All sources are
+# downloaded via curl to /tmp instead.
 INSTALL_DIR="$HOME/.local/share/omarchy-flatpak-menu"
 BIN_DIR="$HOME/.local/bin"
 
@@ -380,6 +381,31 @@ if [[ "${FLATPAK_INSTALLED:-0}" -eq 0 ]]; then
     echo "   Run: sudo pacman -S flatpak"
     echo "   Then: flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo"
     echo "   Then restart shell: omarchy restart shell"
+fi
+
+# 8. Validate final menu (fail loudly instead of hiding the menu silently)
+echo "[VERIFY] Validating menu..."
+if python3 -c "
+import json, re, sys
+with open('$HOME/.config/omarchy/extensions/omarchy-menu.jsonc') as f:
+    content = f.read()
+content = re.sub(r'//.*', '', content)
+content = re.sub(r',(\s*[}\]])', r'\1', content)
+data = json.loads(content)
+inst = [k for k in data if k.startswith('install.flatpak')]
+rem = [k for k in data if k.startswith('remove.flatpak')]
+assert 'install.flatpak' in data, 'missing install.flatpak'
+assert 'remove.flatpak' in data, 'missing remove.flatpak'
+print(f'install={len(inst)} remove={len(rem)}')
+" 2>/dev/null; then
+    echo "[VERIFY] Menu OK"
+else
+    echo "[ERROR] Menu validation failed - restoring backup" >&2
+    ls -t "$HOME/.config/omarchy/extensions/omarchy-menu.jsonc.bak."* 2>/dev/null | head -1 | xargs -I{} cp {} "$HOME/.config/omarchy/extensions/omarchy-menu.jsonc" 2>/dev/null || true
+    exit 1
+fi
+if ! command -v flatpak >/dev/null 2>&1; then
+    echo "[WARN] Flatpak not installed - Flatpak Apps will stay hidden until you install it" >&2
 fi
 echo ""
 echo "Next steps:"

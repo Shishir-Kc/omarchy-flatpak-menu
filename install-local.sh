@@ -375,6 +375,31 @@ if [[ "${FLATPAK_INSTALLED:-0}" -eq 0 ]]; then
     echo "   Then: flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo"
     echo "   Then restart shell: omarchy restart shell"
 fi
+
+# 8. Validate final menu (fail loudly instead of hiding the menu silently)
+echo "[VERIFY] Validating menu..."
+if python3 -c "
+import json, re, sys
+with open('$HOME/.config/omarchy/extensions/omarchy-menu.jsonc') as f:
+    content = f.read()
+content = re.sub(r'//.*', '', content)
+content = re.sub(r',(\s*[}\]])', r'\1', content)
+data = json.loads(content)
+inst = [k for k in data if k.startswith('install.flatpak')]
+rem = [k for k in data if k.startswith('remove.flatpak')]
+assert 'install.flatpak' in data, 'missing install.flatpak'
+assert 'remove.flatpak' in data, 'missing remove.flatpak'
+print(f'install={len(inst)} remove={len(rem)}')
+" 2>/dev/null; then
+    echo "[VERIFY] Menu OK"
+else
+    echo "[ERROR] Menu validation failed - restoring backup" >&2
+    ls -t "$HOME/.config/omarchy/extensions/omarchy-menu.jsonc.bak."* 2>/dev/null | head -1 | xargs -I{} cp {} "$HOME/.config/omarchy/extensions/omarchy-menu.jsonc" 2>/dev/null || true
+    exit 1
+fi
+if ! command -v flatpak >/dev/null 2>&1; then
+    echo "[WARN] Flatpak not installed - Flatpak Apps will stay hidden until you install it" >&2
+fi
 echo ""
 echo "Next steps:"
 echo "   1. Open menu (Super+Space) -> Install -> Flatpak Apps"
