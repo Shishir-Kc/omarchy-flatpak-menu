@@ -4,7 +4,7 @@
 
 set -euo pipefail
 
-REPO_BASE="https://raw.githubusercontent.com/omarchy/omarchy-flatpak-menu/main"
+REPO_BASE="https://raw.githubusercontent.com/Shishir-Kc/omarchy-flatpak-menu/refs/heads/master"
 INSTALL_DIR="$HOME/.local/share/omarchy-flatpak-menu"
 BIN_DIR="$HOME/.local/bin"
 
