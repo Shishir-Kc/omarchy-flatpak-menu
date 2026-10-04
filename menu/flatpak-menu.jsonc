@@ -1,18 +1,18 @@
 {
   // Flatpak Installation Menu
-  "install.flatpak": {"icon": "[FLATPAK]", "label": "Flatpak Apps", "description": "Install applications from Flathub"},
+  "install.flatpak": {"icon": "󰏓", "label": "Flatpak Apps", "description": "Install applications from Flathub"},
 
   // Categories
-  "install.flatpak.browsers": {"icon": "[WEB]", "label": "Browsers"},
-  "install.flatpak.communication": {"icon": "[CHAT]", "label": "Communication"},
-  "install.flatpak.development": {"icon": "[DEV]", "label": "Development"},
-  "install.flatpak.media": {"icon": "[MEDIA]", "label": "Media"},
-  "install.flatpak.gaming": {"icon": "[GAME]", "label": "Gaming"},
-  "install.flatpak.utilities": {"icon": "[TOOLS]", "label": "Utilities"},
+  "install.flatpak.browsers": {"icon": "", "label": "Browsers"},
+  "install.flatpak.communication": {"icon": "󰭹", "label": "Communication"},
+  "install.flatpak.development": {"icon": "󰵮", "label": "Development"},
+  "install.flatpak.media": {"icon": "󰓇", "label": "Media"},
+  "install.flatpak.gaming": {"icon": "", "label": "Gaming"},
+  "install.flatpak.utilities": {"icon": "󰏓", "label": "Utilities"},
 
   // Search Entry (fzf-based)
   "install.flatpak.search": {
-    "icon": "[SEARCH]",
+    "icon": "🔍",
     "label": "Search Flathub...",
     "description": "Browse and install any app from Flathub (fuzzy search)",
     "when": "command -v flatpak >/dev/null",
@@ -23,32 +23,32 @@
   // BROWSERS (6 apps)
   // ==========================================
   "install.flatpak.browsers.firefox": {
-    "icon": "[FIREFOX]", "label": "Firefox", "description": "Mozilla Firefox (Flatpak)",
+    "icon": "", "label": "Firefox", "description": "Mozilla Firefox (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info org.mozilla.firefox",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub org.mozilla.firefox'"
   },
   "install.flatpak.browsers.chrome": {
-    "icon": "[CHROME]", "label": "Google Chrome", "description": "Google Chrome (Flatpak)",
+    "icon": "", "label": "Google Chrome", "description": "Google Chrome (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info com.google.Chrome",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub com.google.Chrome'"
   },
   "install.flatpak.browsers.brave": {
-    "icon": "[BRAVE]", "label": "Brave Browser", "description": "Brave Browser (Flatpak)",
+    "icon": "󰖟", "label": "Brave Browser", "description": "Brave Browser (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info com.brave.Browser",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub com.brave.Browser'"
   },
   "install.flatpak.browsers.edge": {
-    "icon": "[EDGE]", "label": "Microsoft Edge", "description": "Microsoft Edge (Flatpak)",
+    "icon": "󰇩", "label": "Microsoft Edge", "description": "Microsoft Edge (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info com.microsoft.Edge",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub com.microsoft.Edge'"
   },
   "install.flatpak.browsers.zen": {
-    "icon": "[ZEN]", "label": "Zen Browser", "description": "Zen Browser (Flatpak)",
+    "icon": "󰖟", "label": "Zen Browser", "description": "Zen Browser (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info app.zen_browser.zen",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub app.zen_browser.zen'"
   },
   "install.flatpak.browsers.vivaldi": {
-    "icon": "[VIVALDI]", "label": "Vivaldi", "description": "Vivaldi Browser (Flatpak)",
+    "icon": "󰖟", "label": "Vivaldi", "description": "Vivaldi Browser (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info com.vivaldi.Vivaldi",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub com.vivaldi.Vivaldi'"
   },
@@ -57,37 +57,37 @@
   // COMMUNICATION (7 apps)
   // ==========================================
   "install.flatpak.communication.discord": {
-    "icon": "[DISCORD]", "label": "Discord", "description": "Discord (Flatpak)",
+    "icon": "󰙯", "label": "Discord", "description": "Discord (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info com.discordapp.Discord",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub com.discordapp.Discord'"
   },
   "install.flatpak.communication.slack": {
-    "icon": "[SLACK]", "label": "Slack", "description": "Slack (Flatpak)",
+    "icon": "󰒱", "label": "Slack", "description": "Slack (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info com.slack.Slack",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub com.slack.Slack'"
   },
   "install.flatpak.communication.signal": {
-    "icon": "[SIGNAL]", "label": "Signal", "description": "Signal Desktop (Flatpak)",
+    "icon": "󰭹", "label": "Signal", "description": "Signal Desktop (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info org.signal.Signal",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub org.signal.Signal'"
   },
   "install.flatpak.communication.telegram": {
-    "icon": "[TELEGRAM]", "label": "Telegram", "description": "Telegram Desktop (Flatpak)",
+    "icon": "󰋎", "label": "Telegram", "description": "Telegram Desktop (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info org.telegram.desktop",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub org.telegram.desktop'"
   },
   "install.flatpak.communication.whatsapp": {
-    "icon": "[WHATSAPP]", "label": "WhatsApp", "description": "WhatsApp (Flatpak)",
+    "icon": "󰖣", "label": "WhatsApp", "description": "WhatsApp (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info com.rtosta.zapzap",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub com.rtosta.zapzap'"
   },
   "install.flatpak.communication.element": {
-    "icon": "[ELEMENT]", "label": "Element", "description": "Element Matrix Client (Flatpak)",
+    "icon": "󰙯", "label": "Element", "description": "Element Matrix Client (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info im.riot.Riot",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub im.riot.Riot'"
   },
   "install.flatpak.communication.thunderbird": {
-    "icon": "[THUNDERBIRD]", "label": "Thunderbird", "description": "Mozilla Thunderbird (Flatpak)",
+    "icon": "󰇮", "label": "Thunderbird", "description": "Mozilla Thunderbird (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info org.mozilla.Thunderbird",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub org.mozilla.Thunderbird'"
   },
@@ -96,47 +96,47 @@
   // DEVELOPMENT (9 apps)
   // ==========================================
   "install.flatpak.development.vscode": {
-    "icon": "[VSCODE]", "label": "VS Code", "description": "Visual Studio Code (Flatpak)",
+    "icon": "", "label": "VS Code", "description": "Visual Studio Code (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info com.visualstudio.code",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub com.visualstudio.code'"
   },
   "install.flatpak.development.cursor": {
-    "icon": "[CURSOR]", "label": "Cursor", "description": "Cursor AI Editor (Flatpak)",
+    "icon": "", "label": "Cursor", "description": "Cursor AI Editor (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info com.cursor.Cursor",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub com.cursor.Cursor'"
   },
   "install.flatpak.development.zed": {
-    "icon": "[ZED]", "label": "Zed", "description": "Zed Editor (Flatpak)",
+    "icon": "", "label": "Zed", "description": "Zed Editor (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info dev.zed.Zed",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub dev.zed.Zed'"
   },
   "install.flatpak.development.github-desktop": {
-    "icon": "[GITHUB]", "label": "GitHub Desktop", "description": "GitHub Desktop (Flatpak)",
+    "icon": "󰊤", "label": "GitHub Desktop", "description": "GitHub Desktop (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info io.github.shiftey.Desktop",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub io.github.shiftey.Desktop'"
   },
   "install.flatpak.development.docker": {
-    "icon": "[DOCKER]", "label": "Docker Desktop", "description": "Docker Desktop (Flatpak)",
+    "icon": "󰡨", "label": "Docker Desktop", "description": "Docker Desktop (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info com.docker.Docker",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub com.docker.Docker'"
   },
   "install.flatpak.development.postman": {
-    "icon": "[POSTMAN]", "label": "Postman", "description": "Postman API Client (Flatpak)",
+    "icon": "󰘍", "label": "Postman", "description": "Postman API Client (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info com.getpostman.Postman",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub com.getpostman.Postman'"
   },
   "install.flatpak.development.insomnia": {
-    "icon": "[INSOMNIA]", "label": "Insomnia", "description": "Insomnia REST Client (Flatpak)",
+    "icon": "󰘍", "label": "Insomnia", "description": "Insomnia REST Client (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info rest.insomnia.Insomnia",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub rest.insomnia.Insomnia'"
   },
   "install.flatpak.development.dbeaver": {
-    "icon": "[DBEAVER]", "label": "DBeaver", "description": "DBeaver Database Tool (Flatpak)",
+    "icon": "", "label": "DBeaver", "description": "DBeaver Database Tool (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info io.dbeaver.DBeaverCommunity",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub io.dbeaver.DBeaverCommunity'"
   },
   "install.flatpak.development.android-studio": {
-    "icon": "[ANDROID]", "label": "Android Studio", "description": "Android Studio (Flatpak)",
+    "icon": "󰀴", "label": "Android Studio", "description": "Android Studio (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info com.google.AndroidStudio",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub com.google.AndroidStudio'"
   },
@@ -145,47 +145,47 @@
   // MEDIA (9 apps)
   // ==========================================
   "install.flatpak.media.spotify": {
-    "icon": "[SPOTIFY]", "label": "Spotify", "description": "Spotify (Flatpak)",
+    "icon": "󰓇", "label": "Spotify", "description": "Spotify (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info com.spotify.Client",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub com.spotify.Client'"
   },
   "install.flatpak.media.vlc": {
-    "icon": "[VLC]", "label": "VLC", "description": "VLC Media Player (Flatpak)",
+    "icon": "󰕼", "label": "VLC", "description": "VLC Media Player (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info org.videolan.VLC",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub org.videolan.VLC'"
   },
   "install.flatpak.media.obs": {
-    "icon": "[OBS]", "label": "OBS Studio", "description": "OBS Studio (Flatpak)",
+    "icon": "", "label": "OBS Studio", "description": "OBS Studio (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info com.obsproject.Studio",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub com.obsproject.Studio'"
   },
   "install.flatpak.media.kdenlive": {
-    "icon": "[KDENLIVE]", "label": "Kdenlive", "description": "Kdenlive Video Editor (Flatpak)",
+    "icon": "", "label": "Kdenlive", "description": "Kdenlive Video Editor (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info org.kde.kdenlive",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub org.kde.kdenlive'"
   },
   "install.flatpak.media.gimp": {
-    "icon": "[GIMP]", "label": "GIMP", "description": "GIMP Image Editor (Flatpak)",
+    "icon": "", "label": "GIMP", "description": "GIMP Image Editor (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info org.gimp.GIMP",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub org.gimp.GIMP'"
   },
   "install.flatpak.media.inkscape": {
-    "icon": "[INKSCAPE]", "label": "Inkscape", "description": "Inkscape Vector Editor (Flatpak)",
+    "icon": "", "label": "Inkscape", "description": "Inkscape Vector Editor (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info org.inkscape.Inkscape",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub org.inkscape.Inkscape'"
   },
   "install.flatpak.media.blender": {
-    "icon": "[BLENDER]", "label": "Blender", "description": "Blender 3D (Flatpak)",
+    "icon": "󰂫", "label": "Blender", "description": "Blender 3D (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info org.blender.Blender",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub org.blender.Blender'"
   },
   "install.flatpak.media.audacity": {
-    "icon": "[AUDACITY]", "label": "Audacity", "description": "Audacity Audio Editor (Flatpak)",
+    "icon": "󰍬", "label": "Audacity", "description": "Audacity Audio Editor (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info org.audacityteam.Audacity",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub org.audacityteam.Audacity'"
   },
   "install.flatpak.media.handbrake": {
-    "icon": "[HANDBRAKE]", "label": "HandBrake", "description": "HandBrake Video Transcoder (Flatpak)",
+    "icon": "󰕼", "label": "HandBrake", "description": "HandBrake Video Transcoder (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info fr.handbrake.ghb",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub fr.handbrake.ghb'"
   },
@@ -194,37 +194,37 @@
   // GAMING (7 apps)
   // ==========================================
   "install.flatpak.gaming.steam": {
-    "icon": "[STEAM]", "label": "Steam", "description": "Steam (Flatpak)",
+    "icon": "", "label": "Steam", "description": "Steam (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info com.valvesoftware.Steam",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub com.valvesoftware.Steam'"
   },
   "install.flatpak.gaming.heroic": {
-    "icon": "[HEROIC]", "label": "Heroic Games Launcher", "description": "Heroic (Epic Games, GOG) (Flatpak)",
+    "icon": "󱓟", "label": "Heroic Games Launcher", "description": "Heroic (Epic Games, GOG) (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info com.heroicgameslauncher.hgl",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub com.heroicgameslauncher.hgl'"
   },
   "install.flatpak.gaming.lutris": {
-    "icon": "[LUTRIS]", "label": "Lutris", "description": "Lutris Game Manager (Flatpak)",
+    "icon": "", "label": "Lutris", "description": "Lutris Game Manager (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info net.lutris.Lutris",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub net.lutris.Lutris'"
   },
   "install.flatpak.gaming.bottles": {
-    "icon": "[BOTTLES]", "label": "Bottles", "description": "Bottles Windows Compatibility (Flatpak)",
+    "icon": "󰍷", "label": "Bottles", "description": "Bottles Windows Compatibility (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info com.usebottles.bottles",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub com.usebottles.bottles'"
   },
   "install.flatpak.gaming.mangohud": {
-    "icon": "[MANGOHUD]", "label": "MangoHud", "description": "MangoHud Overlay (Flatpak)",
+    "icon": "󰋌", "label": "MangoHud", "description": "MangoHud Overlay (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info org.freedesktop.Platform.VulkanLayer.MangoHud",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub org.freedesktop.Platform.VulkanLayer.MangoHud'"
   },
   "install.flatpak.gaming.gamemode": {
-    "icon": "[GAMEMODE]", "label": "GameMode", "description": "GameMode (Flatpak)",
+    "icon": "󰋌", "label": "GameMode", "description": "GameMode (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info com.feralinteractive.GameMode",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub com.feralinteractive.GameMode'"
   },
   "install.flatpak.gaming.prism": {
-    "icon": "[PRISM]", "label": "Prism Launcher", "description": "Prism Launcher (Minecraft) (Flatpak)",
+    "icon": "󰍳", "label": "Prism Launcher", "description": "Prism Launcher (Minecraft) (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info org.prismlauncher.PrismLauncher",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub org.prismlauncher.PrismLauncher'"
   },
@@ -233,52 +233,52 @@
   // UTILITIES (10 apps)
   // ==========================================
   "install.flatpak.utilities.bitwarden": {
-    "icon": "[BITWARDEN]", "label": "Bitwarden", "description": "Bitwarden Password Manager (Flatpak)",
+    "icon": "󰟵", "label": "Bitwarden", "description": "Bitwarden Password Manager (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info com.bitwarden.desktop",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub com.bitwarden.desktop'"
   },
   "install.flatpak.utilities.keepassxc": {
-    "icon": "[KEEPASSXC]", "label": "KeePassXC", "description": "KeePassXC Password Manager (Flatpak)",
+    "icon": "󰟵", "label": "KeePassXC", "description": "KeePassXC Password Manager (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info org.keepassxc.KeePassXC",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub org.keepassxc.KeePassXC'"
   },
   "install.flatpak.utilities.onlyoffice": {
-    "icon": "[ONLYOFFICE]", "label": "ONLYOFFICE", "description": "ONLYOFFICE Editors (Flatpak)",
+    "icon": "", "label": "ONLYOFFICE", "description": "ONLYOFFICE Editors (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info org.onlyoffice.desktopeditors",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub org.onlyoffice.desktopeditors'"
   },
   "install.flatpak.utilities.libreoffice": {
-    "icon": "[LIBREOFFICE]", "label": "LibreOffice", "description": "LibreOffice Suite (Flatpak)",
+    "icon": "", "label": "LibreOffice", "description": "LibreOffice Suite (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info org.libreoffice.LibreOffice",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub org.libreoffice.LibreOffice'"
   },
   "install.flatpak.utilities.obsidian": {
-    "icon": "[OBSIDIAN]", "label": "Obsidian", "description": "Obsidian Notes (Flatpak)",
+    "icon": "󱎏", "label": "Obsidian", "description": "Obsidian Notes (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info md.obsidian.Obsidian",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub md.obsidian.Obsidian'"
   },
   "install.flatpak.utilities.notion": {
-    "icon": "[NOTION]", "label": "Notion", "description": "Notion (Flatpak)",
+    "icon": "󱎏", "label": "Notion", "description": "Notion (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info com.notionapp.Notion",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub com.notionapp.Notion'"
   },
   "install.flatpak.utilities.flatseal": {
-    "icon": "[FLATSEAL]", "label": "Flatseal", "description": "Flatseal Permissions Manager (Flatpak)",
+    "icon": "󰣆", "label": "Flatseal", "description": "Flatseal Permissions Manager (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info com.github.tchx84.Flatseal",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub com.github.tchx84.Flatseal'"
   },
   "install.flatpak.utilities.warehouse": {
-    "icon": "[WAREHOUSE]", "label": "Warehouse", "description": "Warehouse Flatpak Manager (Flatpak)",
+    "icon": "󰏓", "label": "Warehouse", "description": "Warehouse Flatpak Manager (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info io.github.flattool.Warehouse",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub io.github.flattool.Warehouse'"
   },
   "install.flatpak.utilities.qbittorrent": {
-    "icon": "[QBITTORRENT]", "label": "qBittorrent", "description": "qBittorrent (Flatpak)",
+    "icon": "󰶴", "label": "qBittorrent", "description": "qBittorrent (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info org.qbittorrent.qBittorrent",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub org.qbittorrent.qBittorrent'"
   },
   "install.flatpak.utilities.transmission": {
-    "icon": "[TRANSMISSION]", "label": "Transmission", "description": "Transmission BitTorrent (Flatpak)",
+    "icon": "󰶴", "label": "Transmission", "description": "Transmission BitTorrent (Flatpak)",
     "when": "command -v flatpak >/dev/null && ! flatpak info com.transmissionbt.Transmission",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub com.transmissionbt.Transmission'"
   }
