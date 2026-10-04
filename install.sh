@@ -44,6 +44,56 @@ else
     FLATPAK_INSTALLED=1
 fi
 
+# Fix XDG_DATA_DIRS so Flatpak apps appear in Apps menu
+fix_xdg_data_dirs() {
+    echo "[XDG] Fixing XDG_DATA_DIRS for Flatpak apps..."
+    local new_dirs=""
+    # System-wide flatpak exports
+    if [ -d /var/lib/flatpak/exports/share ]; then
+        new_dirs="/var/lib/flatpak/exports/share"
+    fi
+    # User-specific flatpak exports
+    local user_flatpak="${XDG_DATA_HOME:-$HOME/.local/share}/flatpak"
+    if [ -d "$user_flatpak/exports/share" ]; then
+        if [ -n "$new_dirs" ]; then
+            new_dirs="$new_dirs:$user_flatpak/exports/share"
+        else
+            new_dirs="$user_flatpak/exports/share"
+        fi
+    fi
+
+    if [ -n "$new_dirs" ]; then
+        # Check if already in XDG_DATA_DIRS
+        if [[ ":$XDG_DATA_DIRS:" != *":$new_dirs:"* && ":$XDG_DATA_DIRS:" != *":/var/lib/flatpak/exports/share:"* && ":$XDG_DATA_DIRS:" != *"$HOME/.local/share/flatpak/exports/share:"* ]]; then
+            export XDG_DATA_DIRS="$new_dirs:$XDG_DATA_DIRS"
+            echo "[XDG] XDG_DATA_DIRS updated: $new_dirs prepended"
+            
+            # Try to update running omarchy-shell environment
+            if pgrep -x omarchy-shell >/dev/null 2>&1; then
+                # Update systemd user environment so new processes inherit it
+                systemctl --user import-environment XDG_DATA_DIRS 2>/dev/null || true
+                echo "[XDG] Updated systemd user environment"
+            fi
+        else
+            echo "[XDG] Flatpak paths already in XDG_DATA_DIRS"
+        fi
+    fi
+
+    # Also create persistent drop-in for future sessions
+    mkdir -p "$HOME/.config/environment.d"
+    cat > "$HOME/.config/environment.d/flatpak.conf" << 'EOF'
+# Flatpak exports for XDG_DATA_DIRS
+# Added by omarchy-flatpak-menu installer
+EOF
+    # Append flatpak paths if not already there
+    grep -q "/var/lib/flatpak/exports/share" "$HOME/.config/environment.d/flatpak.conf" 2>/dev/null || \
+        echo "XDG_DATA_DIRS=/var/lib/flatpak/exports/share:\${XDG_DATA_DIRS:-/usr/local/share:/usr/share}" >> "$HOME/.config/environment.d/flatpak.conf"
+    local user_flatpak_exports="${XDG_DATA_HOME:-$HOME/.local/share}/flatpak/exports/share"
+    grep -q "$user_flatpak_exports" "$HOME/.config/environment.d/flatpak.conf" 2>/dev/null || \
+        echo "XDG_DATA_DIRS=$user_flatpak_exports:\${XDG_DATA_DIRS:-/usr/local/share:/usr/share}" >> "$HOME/.config/environment.d/flatpak.conf"
+    echo "[XDG] Persistent config created at ~/.config/environment.d/flatpak.conf"
+}
+
 # Add Flathub remote if flatpak is available
 if command -v flatpak >/dev/null 2>&1; then
     if ! flatpak remotes | grep -q "^flathub\s"; then
@@ -54,33 +104,12 @@ if command -v flatpak >/dev/null 2>&1; then
     fi
     # Update appstream metadata (optional, for better search results)
     flatpak update --appstream 2>/dev/null || true
+    
+    # Fix XDG_DATA_DIRS so Flatpak apps appear in Apps menu
+    fix_xdg_data_dirs
 elif [[ "${FLATPAK_INSTALLED:-0}" -eq 0 ]]; then
     echo "[WARN] Skipping Flathub setup - Flatpak not installed yet"
 fi
-
-# 1. Create directories
-mkdir -p "$INSTALL_DIR" "$BIN_DIR"
-
-# 2. Download scripts
-echo "[DOWNLOAD] Downloading scripts..."
-curl -fsSL "$REPO_BASE/bin/omarchy-ensure-flatpak" -o "$BIN_DIR/omarchy-ensure-flatpak"
-curl -fsSL "$REPO_BASE/bin/omarchy-flatpak-install" -o "$BIN_DIR/omarchy-flatpak-install"
-chmod +x "$BIN_DIR/omarchy-ensure-flatpak" "$BIN_DIR/omarchy-flatpak-install"
-
-# 3. Ensure ~/.local/bin is in PATH
-if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
-    echo "[WARN] Add ~/.local/bin to PATH in your shell config"
-fi
-
-# 4. Append menu entries (idempotent, robust)
-echo "[CONFIG] Adding Flatpak menu to Omarchy..."
-MENU_FILE="$HOME/.config/omarchy/extensions/omarchy-menu.jsonc"
-mkdir -p "$(dirname "$MENU_FILE")"
-
-append_menu_entries() {
-    local tmp="/tmp/flatpak-menu-entries.jsonc"
-
-    # Download and strip outer braces to get just the key/value entries
     curl -fsSL "$REPO_BASE/menu/flatpak-menu.jsonc" | python3 -c "
 import json, re, sys
 content = sys.stdin.read()
@@ -242,6 +271,9 @@ fi
 
 # Remove hook
 rm -f "$HOME/.config/omarchy/hooks/post-update.d/99-flatpak-menu-refresh"
+
+# Remove XDG config
+rm -f "$HOME/.config/environment.d/flatpak.conf"
 
 # Remove cache
 rm -rf "$HOME/.cache/omarchy-flatpak-apps.tsv"
