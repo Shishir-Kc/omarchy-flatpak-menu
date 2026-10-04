@@ -1,0 +1,19 @@
+#!/bin/bash
+# omarchy:summary=Ensure Flatpak is installed and Flathub remote is added
+
+set -euo pipefail
+
+# Install flatpak if missing
+if ! command -v flatpak >/dev/null 2>&1; then
+    echo "Installing Flatpak..."
+    omarchy-pkg-add flatpak
+fi
+
+# Add Flathub remote if not present
+if ! flatpak remotes | grep -q "^flathub\s"; then
+    echo "Adding Flathub remote..."
+    flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+fi
+
+# Update local metadata cache
+flatpak update --appstream 2>/dev/null || true

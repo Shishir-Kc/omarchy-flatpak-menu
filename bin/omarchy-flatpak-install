@@ -1,0 +1,53 @@
+#!/bin/bash
+# omarchy:summary=Show a fuzzy-finder TUI for picking Flatpak apps from Flathub to install.
+# omarchy:group=install
+
+set -euo pipefail
+
+source omarchy-ensure-flatpak
+
+fzf_args=(
+  --multi
+  --preview 'flatpak remote-info flathub {1}'
+  --preview-label='alt-p: toggle description, alt-j/k: scroll, tab: multi-select'
+  --preview-label-pos='bottom'
+  --preview-window 'down:65%:wrap'
+  --bind 'alt-p:toggle-preview'
+  --bind 'alt-d:preview-half-page-down,alt-u:preview-half-page-up'
+  --bind 'alt-k:preview-up,alt-j:preview-down'
+  --color 'pointer:green,marker:green'
+  --delimiter '\t'
+  --with-nth '2,3'
+  --header 'Flatpak Apps from Flathub | TAB=multi-select | ALT-p=preview | ENTER=install'
+)
+
+# Get all Flathub apps: app-id \t name \t description
+# Cache for 1 hour to speed up subsequent opens
+cache_file="${XDG_CACHE_HOME:-$HOME/.cache}/omarchy-flatpak-apps.tsv"
+cache_max_age=3600
+
+if [[ -f "$cache_file" ]] && (( $(date +%s) - $(stat -c %Y "$cache_file") < cache_max_age )); then
+    app_list=$(cat "$cache_file")
+else
+    echo "Loading Flathub app list..." >&2
+    app_list=$(flatpak remote-ls flathub --app --columns=application,name,description 2>/dev/null)
+    mkdir -p "$(dirname "$cache_file")"
+    echo "$app_list" > "$cache_file"
+fi
+
+if [[ -z "$app_list" ]]; then
+    echo "Error: No apps found. Is Flathub configured?" >&2
+    exit 1
+fi
+
+selected=$(echo "$app_list" | fzf "${fzf_args[@]}")
+
+if [[ -n "$selected" ]]; then
+    # Extract app IDs (first column, tab-delimited)
+    app_ids=$(echo "$selected" | cut -f1 | tr '\n' ' ')
+
+    # Install in floating terminal with progress
+    omarchy-launch-floating-terminal-with-presentation \
+      "echo 'Installing selected Flatpak apps...'; flatpak install -y flathub $app_ids; echo ''; echo 'Installation complete. Press any key to close.'; read -n 1"
+    omarchy-show-done
+fi

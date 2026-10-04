@@ -1,0 +1,11 @@
+#!/bin/bash
+# omarchy:summary=Refresh Flatpak menu entries after system update
+
+# Re-append menu entries if they were removed by config refresh
+if [[ -f "$HOME/.config/omarchy/extensions/omarchy-menu.jsonc" ]]; then
+    # Check if our entries exist
+    if ! grep -q "install.flatpak" "$HOME/.config/omarchy/extensions/omarchy-menu.jsonc"; then
+        # Re-run menu append logic (idempotent)
+        /usr/local/bin/omarchy-flatpak-menu-append 2>/dev/null || true
+    fi
+fi
