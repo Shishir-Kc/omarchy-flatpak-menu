@@ -41,7 +41,7 @@ Install
     │   ├── 󰖟 Brave Browser (Flatpak)
     │   ├── 󰇩 Microsoft Edge (Flatpak)
     │   ├── 󰖟 Zen Browser (Flatpak)
-    │   └── 󰖟 Vivaldi (Flatpak)
+    │   
     ├── 󰭹 Communication
     │   ├── 󰙯 Discord (Flatpak)
     │   ├── 󰒱 Slack (Flatpak)
