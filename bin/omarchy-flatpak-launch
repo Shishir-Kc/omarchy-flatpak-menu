@@ -1,0 +1,41 @@
+#!/bin/bash
+# omarchy:summary=Show a fuzzy-finder TUI for launching installed Flatpak apps.
+# omarchy:group=launch
+
+set -euo pipefail
+
+if ! command -v flatpak >/dev/null 2>&1; then
+    echo "Error: Flatpak is not installed." >&2
+    exit 1
+fi
+
+fzf_args=(
+  --preview 'flatpak info {1}'
+  --preview-label='alt-p: toggle details, alt-j/k: scroll'
+  --preview-label-pos='bottom'
+  --preview-window 'down:65%:wrap'
+  --bind 'alt-p:toggle-preview'
+  --bind 'alt-d:preview-half-page-down,alt-u:preview-half-page-up'
+  --bind 'alt-k:preview-up,alt-j:preview-down'
+  --color 'pointer:blue,marker:blue'
+  --delimiter '\t'
+  --with-nth '2,3'
+  --header 'Installed Flatpak Apps | Type to filter | ENTER=launch'
+)
+
+# List installed apps: app-id \t name \t description
+app_list=$(flatpak list --app --columns=application,name,description 2>/dev/null || true)
+
+if [[ -z "$app_list" ]]; then
+    echo "[INFO] No Flatpak apps installed." >&2
+    exit 0
+fi
+
+selected=$(echo "$app_list" | fzf "${fzf_args[@]}")
+
+if [[ -n "$selected" ]]; then
+    # Extract app ID (first column, tab-delimited)
+    app_id=$(echo "$selected" | cut -f1)
+    # Launch detached so menu can close
+    uwsm-app -- flatpak run "$app_id" >/dev/null 2>&1 &
+fi

@@ -3,8 +3,8 @@
 
 # Re-append menu entries if they were removed by config refresh
 if [[ -f "$HOME/.config/omarchy/extensions/omarchy-menu.jsonc" ]]; then
-    # Check if our entries exist (both install and remove)
-    if ! grep -q "install.flatpak" "$HOME/.config/omarchy/extensions/omarchy-menu.jsonc" || ! grep -q "remove.flatpak" "$HOME/.config/omarchy/extensions/omarchy-menu.jsonc"; then
+    # Check if our entries exist (install, remove and apps sections)
+    if ! grep -q "install.flatpak" "$HOME/.config/omarchy/extensions/omarchy-menu.jsonc" || ! grep -q "remove.flatpak" "$HOME/.config/omarchy/extensions/omarchy-menu.jsonc" || ! grep -q "apps.flatpak" "$HOME/.config/omarchy/extensions/omarchy-menu.jsonc"; then
         # Call the append helper
         if command -v omarchy-flatpak-menu-append >/dev/null 2>&1; then
             omarchy-flatpak-menu-append

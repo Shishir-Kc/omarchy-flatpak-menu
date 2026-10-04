@@ -125,7 +125,8 @@ echo "[DOWNLOAD] Downloading scripts..."
 curl -fsSL "$REPO_BASE/bin/omarchy-ensure-flatpak" -o "$BIN_DIR/omarchy-ensure-flatpak"
 curl -fsSL "$REPO_BASE/bin/omarchy-flatpak-install" -o "$BIN_DIR/omarchy-flatpak-install"
 curl -fsSL "$REPO_BASE/bin/omarchy-flatpak-remove" -o "$BIN_DIR/omarchy-flatpak-remove"
-chmod +x "$BIN_DIR/omarchy-ensure-flatpak" "$BIN_DIR/omarchy-flatpak-install" "$BIN_DIR/omarchy-flatpak-remove"
+curl -fsSL "$REPO_BASE/bin/omarchy-flatpak-launch" -o "$BIN_DIR/omarchy-flatpak-launch"
+chmod +x "$BIN_DIR/omarchy-ensure-flatpak" "$BIN_DIR/omarchy-flatpak-install" "$BIN_DIR/omarchy-flatpak-remove" "$BIN_DIR/omarchy-flatpak-launch"
 
 # 3. Ensure ~/.local/bin is in PATH
 if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
@@ -138,15 +139,18 @@ MENU_FILE="$HOME/.config/omarchy/extensions/omarchy-menu.jsonc"
 mkdir -p "$(dirname "$MENU_FILE")"
 
 append_menu_entries() {
-    local tmp="/tmp/flatpak-menu-entries.jsonc"
     local tmp_install="/tmp/flatpak-menu-install.jsonc"
     local tmp_remove="/tmp/flatpak-menu-remove.jsonc"
+    local tmp_apps="/tmp/flatpak-menu-apps.jsonc"
     curl -fsSL "$REPO_BASE/menu/flatpak-menu.jsonc" -o "$tmp_install"
     curl -fsSL "$REPO_BASE/menu/flatpak-remove.jsonc" -o "$tmp_remove"
+    curl -fsSL "$REPO_BASE/menu/flatpak-apps.jsonc" -o "$tmp_apps"
     local install_jsonc="$tmp_install"
     local remove_jsonc="$tmp_remove"
+    local apps_jsonc="$tmp_apps"
+    local tmp="/tmp/flatpak-menu-entries.jsonc"
 
-    # Merge install + remove entries, strip outer braces/comments, validate
+    # Merge install + remove + apps entries, strip outer braces/comments, validate
     python3 -c "
 import json, re
 def load_inner(path):
@@ -170,13 +174,15 @@ def load_inner(path):
     return data, inner
 idata, iinner = load_inner('$install_jsonc')
 rdata, rinner = load_inner('$remove_jsonc')
+adata, ainner = load_inner('$apps_jsonc')
 # Validate no duplicate keys across files
-overlap = set(idata) & set(rdata)
+overlap = set(idata) & set(rdata) & set(adata)
+overlap = set(idata) & set(rdata) | set(idata) & set(adata) | set(rdata) & set(adata)
 assert not overlap, f'duplicate keys: {overlap}'
-combined = iinner.rstrip().rstrip(',') + ',\n' + rinner
+combined = iinner.rstrip().rstrip(',') + ',\n' + rinner.rstrip().rstrip(',') + ',\n' + ainner
 with open('$tmp', 'w') as out:
     out.write(combined)
-print(f'install={len(idata)} remove={len(rdata)}')
+print(f'install={len(idata)} remove={len(rdata)} apps={len(adata)}')
 " || { echo "[ERROR] Failed to parse flatpak menu files" >&2; exit 1; }
 
     # Backup
@@ -221,14 +227,14 @@ EOF
         return
     fi
 
-    # If both install and remove entries present, skip (idempotent)
-    if grep -q '"install\.flatpak"' "$MENU_FILE" && grep -q '"remove\.flatpak"' "$MENU_FILE"; then
+    # If all three sections present, skip (idempotent)
+    if grep -q '"install\.flatpak"' "$MENU_FILE" && grep -q '"remove\.flatpak"' "$MENU_FILE" && grep -q '"apps\.flatpak"' "$MENU_FILE"; then
         echo "[CONFIG] Flatpak menu entries already present, skipping..."
         return
     fi
 
-    # If partially present (e.g. old version without remove), clean slate via python merge
-    if grep -q '"install\.flatpak"\|"remove\.flatpak"' "$MENU_FILE"; then
+    # If partially present (e.g. old version), clean slate via python merge
+    if grep -q '"install\.flatpak"\|"remove\.flatpak"\|"apps\.flatpak"' "$MENU_FILE"; then
         echo "[CONFIG] Partial entries found, rebuilding via merge..."
         python3 -c "
 import json, re
@@ -249,7 +255,7 @@ jsonc = '\n'.join(lines)
 jsonc = re.sub(r',(\s*[}\]])', r'\1', jsonc)
 data = json.loads(jsonc)
 # Drop all flatpak keys, keep user custom keys
-data = {k: v for k, v in data.items() if not k.startswith('install.flatpak') and not k.startswith('remove.flatpak')}
+data = {k: v for k, v in data.items() if not k.startswith('install.flatpak') and not k.startswith('remove.flatpak') and not k.startswith('apps.flatpak')}
 with open('$tmp.user', 'w') as out:
     items = list(data.items())
     for i, (k, v) in enumerate(items):
@@ -313,6 +319,7 @@ echo "[REMOVE] Uninstalling Omarchy Flatpak Menu..."
 rm -f "$HOME/.local/bin/omarchy-ensure-flatpak"
 rm -f "$HOME/.local/bin/omarchy-flatpak-install"
 rm -f "$HOME/.local/bin/omarchy-flatpak-remove"
+rm -f "$HOME/.local/bin/omarchy-flatpak-launch"
 rm -f "$HOME/.local/bin/omarchy-flatpak-menu-append"
 
 # Remove menu entries cleanly using Python (preserves JSONC structure)
@@ -337,8 +344,8 @@ for line in jsonc.split('\n'):
 jsonc = '\n'.join(lines)
 jsonc = re.sub(r',(\s*[}\]])', r'\1', jsonc)
 data = json.loads(jsonc)
-# Delete flatpak keys (install + remove)
-keys_to_del = [k for k in data if k.startswith('install.flatpak') or k.startswith('remove.flatpak')]
+# Delete flatpak keys (install + remove + apps)
+keys_to_del = [k for k in data if k.startswith('install.flatpak') or k.startswith('remove.flatpak') or k.startswith('apps.flatpak')]
 for k in keys_to_del:
     del data[k]
 # Rebuild: keep header, write remaining keys
@@ -394,9 +401,11 @@ content = re.sub(r',(\s*[}\]])', r'\1', content)
 data = json.loads(content)
 inst = [k for k in data if k.startswith('install.flatpak')]
 rem = [k for k in data if k.startswith('remove.flatpak')]
+app = [k for k in data if k.startswith('apps.flatpak')]
 assert 'install.flatpak' in data, 'missing install.flatpak'
 assert 'remove.flatpak' in data, 'missing remove.flatpak'
-print(f'install={len(inst)} remove={len(rem)}')
+assert 'apps.flatpak' in data, 'missing apps.flatpak'
+print(f'install={len(inst)} remove={len(rem)} apps={len(app)}')
 " 2>/dev/null; then
     echo "[VERIFY] Menu OK"
 else
