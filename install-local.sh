@@ -1,14 +1,15 @@
 #!/bin/bash
-# omarchy-flatpak-menu installer
-# Usage: curl -sSL https://.../install.sh | bash
+# omarchy-flatpak-menu local installer
+# Usage: ./install-local.sh (run from the project directory)
 
 set -euo pipefail
 
-REPO_BASE="https://raw.githubusercontent.com/omarchy/omarchy-flatpak-menu/main"
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 INSTALL_DIR="$HOME/.local/share/omarchy-flatpak-menu"
 BIN_DIR="$HOME/.local/bin"
 
-echo "[INSTALL] Installing Omarchy Flatpak Menu..."
+echo "[INSTALL] Installing Omarchy Flatpak Menu (local)..."
 
 # 0. Install Flatpak and add Flathub remote (auto)
 echo "[FLATPAK] Setting up Flatpak..."
@@ -61,10 +62,10 @@ fi
 # 1. Create directories
 mkdir -p "$INSTALL_DIR" "$BIN_DIR"
 
-# 2. Download scripts
-echo "[DOWNLOAD] Downloading scripts..."
-curl -fsSL "$REPO_BASE/bin/omarchy-ensure-flatpak" -o "$BIN_DIR/omarchy-ensure-flatpak"
-curl -fsSL "$REPO_BASE/bin/omarchy-flatpak-install" -o "$BIN_DIR/omarchy-flatpak-install"
+# 2. Copy scripts locally
+echo "[COPY] Copying scripts..."
+cp "$SCRIPT_DIR/bin/omarchy-ensure-flatpak" "$BIN_DIR/omarchy-ensure-flatpak"
+cp "$SCRIPT_DIR/bin/omarchy-flatpak-install" "$BIN_DIR/omarchy-flatpak-install"
 chmod +x "$BIN_DIR/omarchy-ensure-flatpak" "$BIN_DIR/omarchy-flatpak-install"
 
 # 3. Ensure ~/.local/bin is in PATH
@@ -82,7 +83,7 @@ mkdir -p "$(dirname "$MENU_FILE")"
 
 # Append our entries (idempotent - removes old entries first)
 append_menu_entries() {
-    local menu_content=$(curl -fsSL "$REPO_BASE/menu/flatpak-menu.jsonc")
+    local menu_content=$(cat "$SCRIPT_DIR/menu/flatpak-menu.jsonc")
 
     # Remove any existing flatpak entries
     if [[ -f "$MENU_FILE" ]]; then
@@ -110,7 +111,7 @@ append_menu_entries
 # 5. Install hook for auto-refresh
 echo "[HOOK] Installing post-update hook..."
 mkdir -p "$HOME/.config/omarchy/hooks/post-update.d"
-curl -fsSL "$REPO_BASE/hooks/post-update.d/99-flatpak-menu-refresh" -o "$HOME/.config/omarchy/hooks/post-update.d/99-flatpak-menu-refresh"
+cp "$SCRIPT_DIR/hooks/post-update.d/99-flatpak-menu-refresh" "$HOME/.config/omarchy/hooks/post-update.d/99-flatpak-menu-refresh"
 chmod +x "$HOME/.config/omarchy/hooks/post-update.d/99-flatpak-menu-refresh"
 
 # 6. Create uninstaller
@@ -164,6 +165,6 @@ echo ""
 echo "Next steps:"
 echo "   1. Restart Omarchy shell: omarchy restart shell"
 echo "   2. Open menu (Super+Space) -> Install -> Flatpak Apps"
-echo " 3. Try 'Search Flathub...' for fuzzy search"
+echo "   3. Try 'Search Flathub...' for fuzzy search"
 echo ""
 echo "To uninstall: ~/.local/share/omarchy-flatpak-menu/uninstall.sh"

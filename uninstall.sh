@@ -9,6 +9,6 @@ INSTALL_DIR="$HOME/.local/share/omarchy-flatpak-menu"
 if [[ -f "$INSTALL_DIR/uninstall.sh" ]]; then
     exec "$INSTALL_DIR/uninstall.sh"
 else
-    echo "❌ Not installed or already removed"
+    echo "[ERROR] Not installed or already removed"
     exit 1
 fi

@@ -4,11 +4,11 @@ Adds a **Flatpak Apps** submenu to Omarchy's Install menu with curated applicati
 
 ## Features
 
-- 📦 **Curated Categories** - 40+ popular apps organized by category (Browsers, Communication, Development, Media, Gaming, Utilities)
-- 🔍 **Flathub Search** - fzf-based fuzzy finder (like `omarchy-pkg-install`) to browse ALL ~2000 Flathub apps
-- ⚡ **Smart Guards** - Apps auto-hide when already installed via Flatpak
-- 🔄 **Auto-refresh** - Survives `omarchy update` config refreshes
-- 🗑️ **Clean Uninstall** - Removes everything completely
+- [PKG] **Curated Categories** - 40+ popular apps organized by category (Browsers, Communication, Development, Media, Gaming, Utilities)
+- [SEARCH] **Flathub Search** - fzf-based fuzzy finder (like `omarchy-pkg-install`) to browse ALL ~2000 Flathub apps
+- [FAST] **Smart Guards** - Apps auto-hide when already installed via Flatpak
+- [SYNC] **Auto-refresh** - Survives `omarchy update` config refreshes
+- [CLEAN] **Clean Uninstall** - Removes everything completely
 
 ## Installation
 
@@ -33,88 +33,90 @@ Open the Omarchy menu (`Super+Space` by default) and navigate to:
 
 ```
 Install
-└── Flatpak Apps 󰏓
-    ├── 🔍 Search Flathub…          ← Opens fzf search (ALL Flathub apps)
-    ├── Browsers 
-    │   ├── Firefox (Flatpak)
-    │   ├── Chrome (Flatpak)
-    │   ├── Brave Browser (Flatpak)
-    │   ├── Microsoft Edge (Flatpak)
-    │   ├── Zen Browser (Flatpak)
-    │   └── Vivaldi (Flatpak)
-    ├── Communication 󰭹
-    │   ├── Discord (Flatpak)
-    │   ├── Slack (Flatpak)
-    │   ├── Signal (Flatpak)
-    │   ├── Telegram (Flatpak)
-    │   ├── WhatsApp (Flatpak)
-    │   ├── Element (Flatpak)
-    │   └── Thunderbird (Flatpak)
-    ├── Development 󰵮
-    │   ├── VS Code (Flatpak)
-    │   ├── Cursor (Flatpak)
-    │   ├── Zed (Flatpak)
-    │   ├── GitHub Desktop (Flatpak)
-    │   ├── Docker Desktop (Flatpak)
-    │   ├── Postman (Flatpak)
-    │   ├── Insomnia (Flatpak)
-    │   ├── DBeaver (Flatpak)
-    │   └── Android Studio (Flatpak)
-    ├── Media 󰓇
-    │   ├── Spotify (Flatpak)
-    │   ├── VLC (Flatpak)
-    │   ├── OBS Studio (Flatpak)
-    │   ├── Kdenlive (Flatpak)
-    │   ├── GIMP (Flatpak)
-    │   ├── Inkscape (Flatpak)
-    │   ├── Blender (Flatpak)
-    │   ├── Audacity (Flatpak)
-    │   └── HandBrake (Flatpak)
-    ├── Gaming 
-    │   ├── Steam (Flatpak)
-    │   ├── Heroic Games Launcher (Flatpak)
-    │   ├── Lutris (Flatpak)
-    │   ├── Bottles (Flatpak)
-    │   ├── MangoHud (Flatpak)
-    │   ├── GameMode (Flatpak)
-    │   └── Prism Launcher (Flatpak)
-    └── Utilities 󰏓
-        ├── Bitwarden (Flatpak)
-        ├── KeePassXC (Flatpak)
-        ├── ONLYOFFICE (Flatpak)
-        ├── LibreOffice (Flatpak)
-        ├── Obsidian (Flatpak)
-        ├── Notion (Flatpak)
-        ├── Flatseal (Flatpak)
-        ├── Warehouse (Flatpak)
-        ├── qBittorrent (Flatpak)
-        └── Transmission (Flatpak)
+└── Flatpak Apps [FLATPAK]
+    ├── [SEARCH] Search Flathub...          <- Opens fzf search (ALL Flathub apps)
+    ├── [WEB] Browsers
+    │   ├── [FIREFOX] Firefox (Flatpak)
+    │   ├── [CHROME] Chrome (Flatpak)
+    │   ├── [BRAVE] Brave Browser (Flatpak)
+    │   ├── [EDGE] Microsoft Edge (Flatpak)
+    │   ├── [ZEN] Zen Browser (Flatpak)
+    │   └── [VIVALDI] Vivaldi (Flatpak)
+    ├── [CHAT] Communication
+    │   ├── [DISCORD] Discord (Flatpak)
+    │   ├── [SLACK] Slack (Flatpak)
+    │   ├── [SIGNAL] Signal (Flatpak)
+    │   ├── [TELEGRAM] Telegram (Flatpak)
+    │   ├── [WHATSAPP] WhatsApp (Flatpak)
+    │   ├── [ELEMENT] Element (Flatpak)
+    │   └── [THUNDERBIRD] Thunderbird (Flatpak)
+    ├── [DEV] Development
+    │   ├── [VSCODE] VS Code (Flatpak)
+    │   ├── [CURSOR] Cursor (Flatpak)
+    │   ├── [ZED] Zed (Flatpak)
+    │   ├── [GITHUB] GitHub Desktop (Flatpak)
+    │   ├── [DOCKER] Docker Desktop (Flatpak)
+    │   ├── [POSTMAN] Postman (Flatpak)
+    │   ├── [INSOMNIA] Insomnia (Flatpak)
+    │   ├── [DBEAVER] DBeaver (Flatpak)
+    │   └── [ANDROID] Android Studio (Flatpak)
+    ├── [MEDIA] Media
+    │   ├── [SPOTIFY] Spotify (Flatpak)
+    │   ├── [VLC] VLC (Flatpak)
+    │   ├── [OBS] OBS Studio (Flatpak)
+    │   ├── [KDENLIVE] Kdenlive (Flatpak)
+    │   ├── [GIMP] GIMP (Flatpak)
+    │   ├── [INKSCAPE] Inkscape (Flatpak)
+    │   ├── [BLENDER] Blender (Flatpak)
+    │   ├── [AUDACITY] Audacity (Flatpak)
+    │   └── [HANDBRAKE] HandBrake (Flatpak)
+    ├── [GAME] Gaming
+    │   ├── [STEAM] Steam (Flatpak)
+    │   ├── [HEROIC] Heroic Games Launcher (Flatpak)
+    │   ├── [LUTRIS] Lutris (Flatpak)
+    │   ├── [BOTTLES] Bottles (Flatpak)
+    │   ├── [MANGOHUD] MangoHud (Flatpak)
+    │   ├── [GAMEMODE] GameMode (Flatpak)
+    │   └── [PRISM] Prism Launcher (Flatpak)
+    └── [TOOLS] Utilities
+        ├── [BITWARDEN] Bitwarden (Flatpak)
+        ├── [KEEPASSXC] KeePassXC (Flatpak)
+        ├── [ONLYOFFICE] ONLYOFFICE (Flatpak)
+        ├── [LIBREOFFICE] LibreOffice (Flatpak)
+        ├── [OBSIDIAN] Obsidian (Flatpak)
+        ├── [NOTION] Notion (Flatpak)
+        ├── [FLATSEAL] Flatseal (Flatpak)
+        ├── [WAREHOUSE] Warehouse (Flatpak)
+        ├── [QBITTORRENT] qBittorrent (Flatpak)
+        └── [TRANSMISSION] Transmission (Flatpak)
 ```
 
 ### Search Flathub (fzf)
 
-Select **🔍 Search Flathub…** to open the fuzzy finder:
+Select **[SEARCH] Search Flathub...** to open the fuzzy finder:
 
 ```
 Flatpak Apps from Flathub | TAB=multi-select | ALT-p=preview | ENTER=install
-┌─────────────────────────────────────────────────────────────────────┐
-│ Search: discord_                                                    │
-├─────────────────────────────────────────────────────────────────────┤
-│ ▸ com.discordapp.Discord     Discord       Chat for Communities    │
-│   com.rtosta.zapzap          WhatsApp      Unofficial WhatsApp     │
-│   org.telegram.desktop       Telegram      Official Telegram       │
-├─────────────────────────────────────────────────────────────────────┤
-│ Preview: flatpak remote-info flathub com.discordapp.Discord       │
-│                                                                    │
-│   ID:          com.discordapp.Discord                              │
-│   Name:        Discord                                             │
-│   Summary:     Chat for Communities and Friends                    │
-│   Description: Discord is a voice, video and text communication   │
-│                service...                                          │
-│   Version:     0.0.27                                              │
-│   Install:     123.4 MB                                            │
-│   Runtime:     org.freedesktop.Platform/x86_64/24.08              │
-└─────────────────────────────────────────────────────────────────────┘
++---------------------------------------------------------------+
+| Search: discord_                                              |
++---------------------------------------------------------------+
+| > com.discordapp.Discord     Discord       Chat for Communities|
+|   com.rtosta.zapzap          WhatsApp      Unofficial WhatsApp|
+|   org.telegram.desktop       Telegram      Official Telegram  |
++---------------------------------------------------------------+
+| Preview: flatpak remote-info flathub com.discordapp.Discord  |
+|                                                              |
+|   ID:          com.discordapp.Discord                        |
+|   Name:        Discord                                       |
+|   Summary:     Chat for Communities and Friends              |
+|   Description: Discord is a voice, video and text           |
+|                communication service...                      |
+|   Version:     0.0.27                                        |
+|   Install:     123.4 MB                                      |
+|   Runtime:     org.freedesktop.Platform/x86_64/24.08        |
++---------------------------------------------------------------+
+| TAB=multi | ALT-p=preview | ENTER=install                     |
++---------------------------------------------------------------+
 ```
 
 **Controls:**

@@ -6,7 +6,28 @@ set -euo pipefail
 # Install flatpak if missing
 if ! command -v flatpak >/dev/null 2>&1; then
     echo "Installing Flatpak..."
-    omarchy-pkg-add flatpak
+    # Check TTY FIRST before deciding install method
+    if [ -t 0 ] || [ -t 1 ] || [ -t 2 ]; then
+        # We have a TTY, use sudo (omarchy-pkg-add or direct pacman)
+        if command -v omarchy-pkg-add >/dev/null 2>&1; then
+            omarchy-pkg-add flatpak
+        else
+            sudo pacman -S --noconfirm --needed flatpak
+        fi
+    elif command -v pkexec >/dev/null 2>&1; then
+        # GUI environment, try pkexec
+        if pkexec pacman -S --noconfirm --needed flatpak 2>/dev/null; then
+            :
+        else
+            echo "ERROR: Flatpak not installed and cannot auto-install (pkexec dismissed)." >&2
+            echo "Please run: sudo pacman -S flatpak" >&2
+            exit 1
+        fi
+    else
+        echo "ERROR: Flatpak not installed and cannot auto-install (no TTY for sudo)." >&2
+        echo "Please run: sudo pacman -S flatpak" >&2
+        exit 1
+    fi
 fi
 
 # Add Flathub remote if not present
