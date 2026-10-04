@@ -47,11 +47,6 @@
     "when": "command -v flatpak >/dev/null && ! flatpak info app.zen_browser.zen",
     "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub app.zen_browser.zen'"
   },
-  "install.flatpak.browsers.vivaldi": {
-    "icon": "󰖟", "label": "Vivaldi", "description": "Vivaldi Browser (Flatpak)",
-    "when": "command -v flatpak >/dev/null && ! flatpak info com.vivaldi.Vivaldi",
-    "action": "omarchy-launch-floating-terminal-with-presentation 'flatpak install -y flathub com.vivaldi.Vivaldi'"
-  },
 
   // ==========================================
   // COMMUNICATION (7 apps)
