@@ -12,7 +12,7 @@
 
   // Search Entry (fzf-based)
   "install.flatpak.search": {
-    "icon": "🔍",
+    "icon": "󰍉",
     "label": "Search Flathub...",
     "description": "Browse and install any app from Flathub (fuzzy search)",
     "when": "command -v flatpak >/dev/null",
