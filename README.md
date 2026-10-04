@@ -175,6 +175,9 @@ Each app entry uses a `when` guard:
 ### Search Implementation
 `omarchy-flatpak-install` uses `flatpak remote-ls flathub --app --columns=application,name,description` to fetch all apps, caches the list for 1 hour, and pipes to fzf with the same keybindings as `omarchy-pkg-install`.
 
+### Apps Visibility (no logout needed)
+The installer prepends Flatpak export dirs to `XDG_DATA_DIRS`, writes a persistent drop-in at `~/.config/environment.d/flatpak.conf`, then runs `systemctl --user import-environment` + `dbus-update-activation-environment` before `omarchy restart shell`. The restarted shell inherits the fixed paths, so installed Flatpak apps appear in `Apps` immediately.
+
 ### Auto-refresh Hook
 A hook at `~/.config/omarchy/hooks/post-update.d/99-flatpak-menu-refresh` re-applies menu entries after `omarchy update` if they were removed by a config refresh.
 

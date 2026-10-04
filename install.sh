@@ -72,10 +72,12 @@ fix_xdg_data_dirs() {
             echo "[XDG] XDG_DATA_DIRS updated: $new_dirs prepended"
             
             # Try to update running omarchy-shell environment
-            if pgrep -x omarchy-shell >/dev/null 2>&1; then
-                # Update systemd user environment so new processes inherit it
+            if pgrep -f "quickshell.*omarchy/shell" >/dev/null 2>&1; then
+                # Update systemd user environment so restarted shell inherits it
                 systemctl --user import-environment XDG_DATA_DIRS 2>/dev/null || true
-                echo "[XDG] Updated systemd user environment"
+                # Update D-Bus activation env so launched apps inherit it
+                dbus-update-activation-environment XDG_DATA_DIRS 2>/dev/null || true
+                echo "[XDG] Updated systemd user + D-Bus environment"
             fi
         else
             echo "[XDG] Flatpak paths already in XDG_DATA_DIRS"
